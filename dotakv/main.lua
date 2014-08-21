@@ -15,7 +15,7 @@ if KV == nil then
 				local prev = str:sub(i-1,i-1)
 				local peek = str:sub(i+1,i+1)
 				local char = str:sub(i,i)
-				local remain = str:sub(i+1, #str)
+				local remain = str:sub(i, #str)
 				local iterresult = iterator(char, prev, peek, remain, i)
 				if type(iterresult) == "number" then
 					jump = i + iterresult
@@ -31,10 +31,10 @@ if KV == nil then
 		local result = ""
 		local remain = iterate_chars(str, function(char, prev, peek)
 			if char == "\\" then
-				if peek == "\"" then
+				if peek == '"' then
 					result = result .. peek
 				end
-			elseif char == "\"" then
+			elseif char == '"' then
 				if prev ~= "\\" then
 					if stringmode then
 						return false
@@ -56,31 +56,36 @@ if KV == nil then
 			return data[3]
 		end
 		local blockmode = false
+		local commentmode = false
 		local isKey = true
 		local result = {}
 		local keyslist = {}
 		local valuelist = {}
-		local numChars = 0
 		local remain = iterate_chars(str, function(char, prev, peek, remain)
-			numChars = numChars + 1
-			if not blockmode and char == "{" then
+			if char == "/" and prev == "/" then
+				commentmode = true
+			elseif commentmode and (char == "\r" or char == "\n") then
+				commentmode = false
+			elseif commentmode then
+				print("cvomment", char)
+			elseif not blockmode and char == "{" then
 				blockmode = true
 			elseif not char:match("%s") and char ~= "\t" then
 				if blockmode then
 					if char == "}" then
 						blockmode = false
-						return nil
+						return false
 					elseif isKey then
 						isKey = false
-						return parse_add_string(keyslist, char..remain)
+						return parse_add_string(keyslist, remain)
 					else
 						isKey = true
 						if char == "{" then
-							local data = parse_block(char..remain)
+							local data = parse_block(remain)
 							table.insert(valuelist, data[1])
 							return data[3]
 						else
-							return parse_add_string(valuelist, char..remain)
+							return parse_add_string(valuelist, remain)
 						end
 					end
 				end
@@ -89,30 +94,27 @@ if KV == nil then
 		for n, key in pairs(keyslist) do
 			result[key] = valuelist[n]
 		end
-		return {result, remain, numChars+2}
+		return {result, remain, #str-#remain}
+	end
+
+	local function serialize_block(tbl)
+		local result = "{"
+		for k,v in pairs(tbl) do
+			result = table.concat({result, '\n"', k, '" '}, "")
+			if type(v) == "table" then
+				result = result .. serialize_block(v)
+			else
+				result = table.concat({result, '"', tostring(v), '"'})
+			end
+		end
+		return result .. "}"
 	end
 
 	KV = {}
 	function KV:Parse(str)
 		return parse_block(str)[1]
 	end
-end
-function PrintTable(tbl, pad)
-	local pad = pad or 0
-	local function indentPrint(msg)
-		local tab = ""
-		for i = 0, pad do
-			tab = tab .. "\t"
-		end
-		print(tab, msg)
-	end
-	indentPrint(tbl)
-	for k,v in pairs(tbl) do
-		if type(v) == "table" then
-			PrintTable(v, pad+1)
-		else
-			indentPrint(k,v)
-		end
+	function KV:Dump(tbl)
+		return serialize_block(tbl)
 	end
 end
-PrintTable(KV:Parse('{"hue" "br" "yo" "mama" "pow" {"zee" "lel"}}'))
