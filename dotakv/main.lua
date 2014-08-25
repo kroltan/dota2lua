@@ -97,17 +97,24 @@ if KV == nil then
 		return {result, remain, #str-#remain}
 	end
 
-	local function serialize_block(tbl)
+	local function serialize_block(tbl, indent)
+		local indent = indent or 0
+		local indentChar = "\t"
+		local indentation = ""
+		for i = 0, indent-1 do
+			indentation = indentation .. indentChar
+		end
+
 		local result = "{"
 		for k,v in pairs(tbl) do
-			result = table.concat({result, '\n"', k, '" '}, "")
+			result = table.concat({result, '\n', indentation, indentChar,'"', k, '" '}, "")
 			if type(v) == "table" then
-				result = result .. serialize_block(v)
+				result = result .. serialize_block(v, indent + 1)
 			else
 				result = table.concat({result, '"', tostring(v), '"'})
 			end
 		end
-		return result .. "}"
+		return table.concat({result, "\n", indentation, "}"}, "")
 	end
 
 	KV = {}
