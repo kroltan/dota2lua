@@ -3,11 +3,14 @@ require "printtable"
 
 teststr = [[{
 	"hue" "br"
-	"jaja" {
+	"jaja\"" {
 		"skill" "0"
 		"noob" "1"
 	}
+	"as" "df"
 }]]
+
+PrintTable(KV:Parse(teststr))
 
 print(
 	KV:Dump(
