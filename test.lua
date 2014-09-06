@@ -1,19 +1,15 @@
 require "dotakv.main"
 require "printtable"
 
-teststr = [[{
-	"hue" "br" //comments r fun
-	"jaja\"" {
-		"skill" "0"
-		"noob" "1"
-	}
-	"as" "df"
+teststr = [["dotakvTest" {
+	"key" "value"
+	"otherKey" { //C-style "comments" "to break?"
+		"moreKey" "moreValue"
+		{"let's see" "if\n // breaks" } //should it?}
+	} //no block comments!
+	"let's see" "if // breaks"
 }]]
 
-print(
-	KV:Dump(
-		KV:Parse(
-			teststr
-		)
-	)
-)
+tbl = KV:Parse(teststr)
+print(tbl.dotakvTest.otherKey["let's see"])
+print(KV:Dump(tbl))

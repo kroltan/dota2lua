@@ -15,7 +15,8 @@ if KV == nil then
 		commentStart = "/",
 		commentEnd = {"\n", "\r"},
 		blockStart = "{",
-		blockEnd = "}"
+		blockEnd = "}",
+		newline = "n"
 	}
 
 	-- iterate_chars doc
@@ -52,15 +53,15 @@ if KV == nil then
 			if char == chars.escape then -- separate check so escape backslashes don't get processed
 				if peek == chars.delim then
 					result = result .. peek -- escape for \", allowing quotes inside strings
+				elseif peek == chars.newline then
+					result = result .. "\n"
 				end
+				return 1
 			elseif char == chars.delim then
-				if prev ~= chars.escape then
-					-- if it's a quote that is not escaped...
-					if stringmode then
-						return false -- stops iteration when the closing quote is found
-					else
-						stringmode = true
-					end
+				if stringmode then
+					return false -- stops iteration when the closing quote is found
+				else
+					stringmode = true
 				end
 			elseif stringmode then
 				result = result .. char
@@ -125,7 +126,6 @@ if KV == nil then
 
 	local function serialize_block(tbl, indent)
 		indent = indent or 0
-		print(indent)
 		local indentation = indent and indent ~= 0 and chars.indent:rep(indent) or "" -- for first level
 
 		local result = chars.blockStart
@@ -134,7 +134,8 @@ if KV == nil then
 			if type(v) == "table" then -- Joins the value onto the result
 				result = result .. serialize_block(v, indent + 1)
 			else
-				result = table.concat({result, chars.delim, tostring(v), chars.delim}, "")
+				value = tostring(v):gsub("\n", "\\n")
+				result = table.concat({result, chars.delim, value, chars.delim}, "")
 			end
 		end
 		return table.concat({result, "\n", indentation, chars.blockEnd}, "") -- finally joins the closing character to the result
@@ -142,7 +143,10 @@ if KV == nil then
 
 	KV = {}
 	function KV:Parse(str)
-		return parse_block(str)[1] -- returns the parsed content
+		local info = parse_string(str)
+		local key = info[1]
+		local remain = info[2]
+		return {[key] = parse_block(remain)[1]} -- returns the parsed content
 	end
 	function KV:Dump(tbl)
 		return serialize_block(tbl) -- returns the stringified table
