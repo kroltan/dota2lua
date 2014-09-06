@@ -17,6 +17,8 @@ serialize using `somestr = KV:Dump(sometable)`.
 Useful for using together with `FileToString` and `StringToFile`.
 
 ```lua
+KV = require "dotakv.main"
+
 mytable = {
 	a = "b",
 	somekey = {
@@ -25,7 +27,7 @@ mytable = {
 	}
 }
 mystring = [[
-{
+"DOTAKeyValueExample" {
 	"PackageInfo" "Cool Parser"
 	"Supports" "Almost everything" //including comments
 	//anywhere.
@@ -34,6 +36,7 @@ mystring = [[
 	}
 }
 ]]
-print(KV:Dump(mytable))
+
+print(KV:Dump("ImportantStuff", mytable))
 PrintTable(KV:Parse(mystring))
 ```

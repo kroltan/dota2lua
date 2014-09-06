@@ -1,4 +1,4 @@
-require "dotakv.main"
+KV = require "dotakv.main"
 require "printtable"
 
 teststr = [["dotakvTest" {
@@ -12,4 +12,4 @@ teststr = [["dotakvTest" {
 
 tbl = KV:Parse(teststr)
 print(tbl.dotakvTest.otherKey["let's see"])
-print(KV:Dump(tbl))
+print(KV:Dump("Yay", tbl))
