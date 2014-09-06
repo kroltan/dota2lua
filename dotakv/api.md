@@ -39,6 +39,8 @@ local myString = KV:Dump("DOTAHeroes", {
 })
 ```
 
+#The functions below seem to be non-functional in public games as of the last update
+
 ##:Load(file)
 Convenience function to load a KV file from your addon's ./game/dota/ems
 folder. Receives a filename to load. (no folders supported due to the
